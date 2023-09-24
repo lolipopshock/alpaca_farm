@@ -1,4 +1,5 @@
 import copy
+import os 
 import functools
 import json
 import logging
@@ -133,6 +134,12 @@ def openai_completions(
     inputs = zip(prompt_batches, max_tokens)
 
     kwargs = dict(n=1, model=model_name, is_chat=is_chat, **decoding_kwargs)
+
+    if openai.api_type == "azure":
+        deployment_id = os.environ.get("OPENAI_DEPLOYMENT_ID", None)
+        assert deployment_id is not None, "OPENAI_DEPLOYMENT_ID must be set for Azure."
+        kwargs["deployment_id"] = deployment_id
+
     kwargs_to_log = {k: v for k, v in kwargs.items() if "api_key" not in k}
     logging.info(f"Kwargs to completion: {kwargs_to_log}. num_procs={num_procs}")
 
@@ -196,10 +203,20 @@ def _openai_completion_helper(
         openai.api_key = random.choice(openai_api_keys)
 
     # set api base
-    openai.api_base = openai_api_base if openai_api_base is not None else DEFAULT_OPENAI_API_BASE
+    if openai.api_type != "azure":
+        openai.api_base = openai_api_base if openai_api_base is not None else DEFAULT_OPENAI_API_BASE
 
     # copy shared_kwargs to avoid modifying it
     kwargs.update(dict(max_tokens=max_tokens, top_p=top_p, temperature=temperature))
+
+    if openai.api_type == "azure":
+        if "deployment_id" not in kwargs:
+            deployment_id = os.environ.get("OPENAI_DEPLOYMENT_ID", None)
+            assert (
+                deployment_id is not None
+            ), "OPENAI_DEPLOYMENT_ID must be set for Azure."
+            kwargs["deployment_id"] = deployment_id
+
     curr_kwargs = copy.deepcopy(kwargs)
 
     while True:
