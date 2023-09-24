@@ -694,6 +694,27 @@ see [here](https://github.com/tatsu-lab/alpaca_eval/tree/main/src/alpaca_eval/de
 
 </details>
 
+<details>
+  <summary><b>How to use Azure OpenAI Models?</b></b></summary>
+
+  ```bash
+  import openai 
+
+  openai.api_base = '<azure_api_base>'
+  openai.api_key = '<azure_api_key>'
+  openai.api_type = "azure"
+  openai.api_version = "2023-03-15-preview"
+  os.environ["OPENAI_DEPLOYMENT_ID"] = "<azure_deployment_id>" # you might need to switch to different deployment ids for different evaluator models manually
+
+  from alpaca_eval import evaluate
+  evaluate(
+    model_outputs='example/outputs.json',
+    annotators_config='alpaca_eval_gpt4',
+    ... 
+  )
+  ```
+</details>
+
 ## Making a new leaderboard
 
 <details>
